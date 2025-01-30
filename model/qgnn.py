@@ -1,5 +1,5 @@
-from graph_regression_qm9.model.circuit import encode_coor, encode_feature, entanglement_edge
-from graph_regression_qm9.utils.p_utils import get_similarity
+from model.circuit import encode_coor, encode_feature, entanglement_edge
+from utils.p_utils import get_similarity
 
 from qiskit.circuit import Parameter, ParameterVector
 from qiskit_machine_learning.neural_networks import SamplerQNN, EstimatorQNN
@@ -28,11 +28,11 @@ class QGNN(torch.nn.Module):
 
         self.num_qubits = num_qubits
         self.edges_index = edges_index
-
+        # Initialize quantum circuit components: encoder, feature encoder, and entanglement
         self.encoder = encode_coor(self.num_qubits)
         self.conv_feature = encode_feature(self.num_qubits)
         self.entanglement = entanglement_edge(self.num_qubits, self.edges_index)
-
+        # Build the quantum circuit by combining the components
         self.circuit = QuantumCircuit(self.num_qubits)
 
         self.circuit.compose(self.encoder, range(self.num_qubits), inplace=True)
@@ -40,11 +40,9 @@ class QGNN(torch.nn.Module):
         self.circuit.compose(self.entanglement, range(self.num_qubits), inplace=True)
 
         # REMEMBER TO SET input_gradients=True FOR ENABLING HYBRID GRADIENT BACKPROP
-        # 输入信息： encoder 3个坐标信息 self.conv_feature 节点特征  self.entanglement 边特征（边的个数相关）
-        # 参数信息： self.conv_feature 3个参数 self.entanglement 1个边参数
-        # 输入：self.encoder.parameters, self.conv_feature.parameters[3:], self.entanglement[1:]
-        # 参数：self.conv_feature.parameters[:3]， self.entanglement[:1]
-
+        # inputs：self.encoder.parameters, self.conv_feature.parameters[3:], self.entanglement[1:]
+        # paras：self.conv_feature.parameters[:3]， self.entanglement[:1]
+        # Create the quantum neural network (QNN)
         self.qnn = EstimatorQNN(
             circuit=self.circuit,
             input_params=self.encoder.parameters[:] + self.conv_feature.parameters[11:] + self.entanglement[1:],
@@ -60,8 +58,6 @@ class QGNN(torch.nn.Module):
             nn.Linear(1, 3),
             nn.SiLU(),
             nn.Linear(3, 1))
-    print(weight_params)
-    # 坐标 节点特征 边特征
     # graph.h, graph.x, graph.edges
     def forward(self, graph):
         # self.num_qubits = nx.number_of_nodes(graph.g)

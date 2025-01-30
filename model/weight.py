@@ -40,8 +40,6 @@ class QGNN(torch.nn.Module):
         self.circuit.compose(self.entanglement, range(self.num_qubits), inplace=True)
 
         # REMEMBER TO SET input_gradients=True FOR ENABLING HYBRID GRADIENT BACKPROP
-        # 输入信息： encoder 3个坐标信息 self.conv_feature 节点特征  self.entanglement 边特征（边的个数相关）
-        # 参数信息： self.conv_feature 3个参数 self.entanglement 1个边参数
         # 输入：self.encoder.parameters, self.conv_feature.parameters[3:], self.entanglement[1:]
         # 参数：self.conv_feature.parameters[:3]， self.entanglement[:1]
 
